@@ -6,9 +6,14 @@ import os
 
 calculation = ""
 power = 0
-history = open('history.txt', 'a+')
-history_list = []
 new_line = ""
+bg_color = "#ffffff"
+color = "#000000"
+
+with open(file="history.txt", mode="r") as ff:
+    history_list = []
+    for item in ff:
+        history_list.append(item.rstrip())
 
 
 def add_to_calculation(symbol):
@@ -63,11 +68,14 @@ def evaluate_calculation():
     text_result.config(state=tk.NORMAL)
     global calculation
     global new_line
+    global history_list
     new_line = calculation + "="
     try:
         calculation = sp.parse_expr(calculation)
         calculation = str(calculation.evalf())
         calculation = calculation.rstrip('0').rstrip('.')
+        if calculation == "":
+            calculation = "0"
         if calculation == "nan":
             clear_field()
             text_result.config(state=tk.NORMAL)
@@ -99,20 +107,19 @@ def evaluate_calculation():
         text_result.insert(1.0, "Error")
         text_result.config(state=tk.DISABLED)
 
-    if calculation:
+    if calculation != "":
         new_line = new_line + calculation
     else:
         new_line = new_line + "Error"
 
-    print(new_line)
-
+    history = open('history.txt', 'a+')
     history.write(new_line + "\n")
+    history.close()
 
-    with open("history.txt") as file:
+    with open(file="history.txt", mode="r") as ff:
         history_list = []
-        for item in file:
+        for item in ff:
             history_list.append(item.rstrip())
-    print(history_list)
 
 
 def clear_field():
@@ -240,9 +247,19 @@ btn_pow = tk.Button(root, text="ₓʸ", command=lambda: add_to_calculation("**")
 btn_pow.grid(row=7, column=2)
 
 
+def menu():
+    hide_btn()
+    label = Label(root, text="Menu", font=("Arial", 14))
+    label.grid(row=0, column=0, pady=10)
+    global hist_btn
+    hist_btn = tk.Button(root, text="History", command=lambda: set_up_history(), width=10, font=("Arial", 11))
+    hist_btn.grid(row=1, column=0, padx=10)
+    global bg_btn
+    bg_btn = tk.Button(root, text="Customize", command=lambda: custom_bg(), width=10, font=("Arial", 11))
+    bg_btn.grid(row=2, column=0)
+
+
 #History
-
-
 def hide_btn():
     btn_1.grid_remove()
     btn_2.grid_remove()
@@ -269,8 +286,67 @@ def hide_btn():
     btn_sqr.grid_remove()
     btn_pow.grid_remove()
     text_result.grid_remove()
-    hist_btn.grid_remove()
-    bg_btn.grid_remove()
+    menu_btn.grid_remove()
+    try:
+        hist_btn.grid_remove()
+        bg_btn.grid_remove()
+    except:
+        pass
+
+
+def show_button():
+    btn_1.grid(row=3, column=0)
+    btn_2.grid(row=3, column=1)
+    btn_3.grid(row=3, column=2)
+    btn_4.grid(row=4, column=0)
+    btn_5.grid(row=4, column=1)
+    btn_6.grid(row=4, column=2)
+    btn_7.grid(row=5, column=0)
+    btn_8.grid(row=5, column=1)
+    btn_9.grid(row=5, column=2)
+    btn_0.grid(row=6, column=1)
+    btn_open.grid(row=6, column=0)
+    btn_close.grid(row=6, column=2)
+    btn_plus.grid(row=3, column=3)
+    btn_minus.grid(row=4, column=3)
+    btn_multi.grid(row=5, column=3)
+    btn_div.grid(row=6, column=3)
+    btn_ce.grid(row=2, column=0)
+    btn_c.grid(row=2, column=1)
+    btn_back.grid(row=2, column=3)
+    btn_del.grid(row=2, column=2)
+    btn_equal.grid(row=7, column=3)
+    btn_dec.grid(row=7, column=0)
+    btn_sqr.grid(row=7, column=1)
+    btn_pow.grid(row=7, column=2)
+    text_result.grid(columnspan=4, row=1)
+    menu_btn.place(x=230, y=5)
+
+
+
+def add_history_to_calc(calc, button, content_frame, label, scrollbar, canvas, frame):
+    global calculation
+    global text_result
+    text_result.config(state=tk.NORMAL)
+    calculation = calc
+    for x in reversed(calc):
+        if x == "=":
+            calculation = calculation[:-1]
+            break
+        else:
+            calculation = calculation[:-1]
+
+    text_result.delete(1.0, "end")
+    text_result.insert(1.0, calculation)
+    text_result.config(state=tk.DISABLED)
+
+    button.grid_remove()
+    content_frame.grid_remove()
+    label.grid_remove()
+    scrollbar.grid_remove()
+    canvas.grid_remove()
+    frame.grid_remove()
+    show_button()
 
 
 def set_up_history():
@@ -294,9 +370,15 @@ def set_up_history():
     label = tk.Label(content_frame, text="History", font=("Arial", 14))
     label.grid(row=0, column=0)
 
-    for i in range(1, 100):
-        button = tk.Button(content_frame, text=f"Button {i}", width=10, font=("Arial", 12))
-        button.grid(row=i, column=0, pady=2)
+    count = 0
+
+    history_list.reverse()
+
+    for i in history_list:
+        count += 1
+        button = tk.Button(content_frame, text=f"{i}",
+                           command=lambda i=i: add_history_to_calc(i, button, content_frame, label, scrollbar, canvas, frame), width=15, font=("Arial", 12))
+        button.grid(row=count, column=0, pady=2)
 
     # Step 8: Create Window Resizing Configuration
     root.columnconfigure(0, weight=1)
@@ -319,6 +401,26 @@ def set_up_history():
 
 
 #Customize background
+def set_color(colour, btn_white, btn_gry, btn_red, btn_ylw, btn_orng, btn_grn, btn_blu, btn_pnk, label):
+    global color
+    global bg_color
+    if colour == "white":
+        bg_color = "#ffffff"
+        color = "#000000"
+    if colour == "pink":
+        bg_color = "#dd00ff"
+    btn_white.grid_remove()
+    btn_gry.grid_remove()
+    btn_red.grid_remove()
+    btn_ylw.grid_remove()
+    btn_orng.grid_remove()
+    btn_grn.grid_remove()
+    btn_blu.grid_remove()
+    btn_pnk.grid_remove()
+    label.grid_remove()
+    show_button()
+
+
 def custom_bg():
     hide_btn()
     label = tk.Label(root, text="Background color", font=("Arial", 14))
@@ -335,15 +437,13 @@ def custom_bg():
     btn_orng.grid(row=3, column=0, pady=5)
     btn_grn = tk.Button(root, text="Green", width=7, font=("Arial", 12), bg='#1adb1a')
     btn_grn.grid(row=3, column=1, pady=5)
-    btn_grn = tk.Button(root, text="Blue", width=7, font=("Arial", 12), bg='#00b3ff')
-    btn_grn.grid(row=4, column=0, pady=5)
-    btn_grn = tk.Button(root, text="Pink", width=7, font=("Arial", 12), bg='#dd00ff')
-    btn_grn.grid(row=4, column=1, pady=5)
+    btn_blu = tk.Button(root, text="Blue", width=7, font=("Arial", 12), bg='#00b3ff')
+    btn_blu.grid(row=4, column=0, pady=5)
+    btn_pnk = tk.Button(root, text="Pink", command=lambda: set_color("pink", btn_white, btn_gry, btn_red, btn_ylw, btn_orng, btn_grn, btn_blu, btn_pnk, label), width=7, font=("Arial", 12), bg='#dd00ff')
+    btn_pnk.grid(row=4, column=1, pady=5)
 
 
-hist_btn = tk.Button(root, text="⌛", command=lambda: set_up_history(), width=3, font=("Arial", 11), bg='RED')
-hist_btn.place(x=230, y=5)
-bg_btn = tk.Button(root, text="🖌", command=lambda: custom_bg(), width=3, font=("Arial", 11))
-bg_btn.place(x=185, y=5)
+menu_btn = tk.Button(root, text="🏠", command=lambda: menu(), width=3, font=("Arial", 11))
+menu_btn.place(x=230, y=5)
 
 root.mainloop()
